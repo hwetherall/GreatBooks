@@ -7,7 +7,11 @@
       "Bash(npm run:*)",
       "Bash(npx tsc:*)",
       "Bash(test:*)",
-      "Bash(git add:*)"
+      "Bash(git add:*)",
+      "Bash(git -C /Users/harry/code/GreatWorks remote -v)",
+      "Bash(git -C /Users/harry/code/GreatWorks log --oneline -1 --format=\"%ci %s\")",
+      "Bash(./node_modules/.bin/tsc --noEmit)",
+      "Bash(echo \"tsc exit: $?\")"
     ]
   }
 }
