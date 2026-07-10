@@ -77,7 +77,10 @@ async function warm(target: WarmTarget): Promise<WarmResult> {
     const content = await readSseContent(res);
     const words = content.split(/\s+/).filter(Boolean).length;
     const trimmed = content.trim();
-    const truncated = trimmed.length > 0 && !/[.!?…"'”’)]$/.test(trimmed);
+    // Ignore trailing markdown emphasis/heading characters when checking
+    // whether the text ends mid-sentence.
+    const proseEnd = trimmed.replace(/[*_#`]+$/, "");
+    const truncated = proseEnd.length > 0 && !/[.!?…"'”’)]$/.test(proseEnd);
     return {
       label: target.label,
       ok: trimmed.length > 0,

@@ -14,7 +14,13 @@
       "Bash(echo \"tsc exit: $?\")",
       "Bash(vercel ls *)",
       "Bash(git -C /Users/harry/code/GreatWorks status --short)",
-      "Bash(npx supabase *)"
+      "Bash(npx supabase *)",
+      "Bash(/private/tmp/claude-501/-Users-harry-code-GreatWorks/624a57e1-684d-41f9-b7fa-49486a76fce7/scratchpad/venv/bin/pip -q install pillow)",
+      "Bash(curl -sL -o cormorant.ttf \"https://github.com/google/fonts/raw/main/ofl/cormorantgaramond/CormorantGaramond%5Bwght%5D.ttf\")",
+      "Bash(curl -sL -o cormorant-italic.ttf \"https://github.com/google/fonts/raw/main/ofl/cormorantgaramond/CormorantGaramond-Italic%5Bwght%5D.ttf\")",
+      "Bash(curl -sL -o lora.ttf \"https://github.com/google/fonts/raw/main/ofl/lora/Lora%5Bwght%5D.ttf\")",
+      "Bash(/private/tmp/claude-501/-Users-harry-code-GreatWorks/624a57e1-684d-41f9-b7fa-49486a76fce7/scratchpad/venv/bin/python /private/tmp/claude-501/-Users-harry-code-GreatWorks/624a57e1-684d-41f9-b7fa-49486a76fce7/scratchpad/make_og.py)",
+      "Bash(curl -s http://localhost:55600/)"
     ]
   }
 }
