@@ -20,6 +20,7 @@ interface AnnotationState {
   passage: string;
   lineRange: string;
   lines: { start: number; end: number };
+  anchorId?: string;
 }
 
 export default function ReadingContainer() {
@@ -82,9 +83,10 @@ export default function ReadingContainer() {
   function handleAnnotateRequest(
     passage: string,
     lineRange: string,
-    lines: { start: number; end: number }
+    lines: { start: number; end: number },
+    anchorId?: string
   ) {
-    setAnnotation({ passage, lineRange, lines });
+    setAnnotation({ passage, lineRange, lines, anchorId });
     if (showFirstHint) {
       localStorage.setItem(FIRST_ENRICH_KEY, "done");
       setShowFirstHint(false);
@@ -124,6 +126,7 @@ export default function ReadingContainer() {
           key={`${annotation.passage}-${level}`}
           passage={annotation.passage}
           lineRange={annotation.lineRange}
+          anchorId={annotation.anchorId}
           level={level}
           onClose={handleAnnotationClose}
           onComplete={handleAnnotationComplete}

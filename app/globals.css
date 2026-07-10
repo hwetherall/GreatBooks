@@ -184,6 +184,11 @@ body {
   margin-bottom: 0;
 }
 
+/* ── Curated anchor lines ─────────────────────────────────────────────────── */
+.anchor-line:hover {
+  background: rgba(201, 168, 76, 0.05);
+}
+
 /* ── Vocab hover styles ───────────────────────────────────────────────────── */
 .vocab-hover-word {
   border-bottom: 1px dotted rgba(201, 168, 76, 0.5);

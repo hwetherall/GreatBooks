@@ -1,7 +1,17 @@
 import { NextRequest } from "next/server";
-import { getAnnotationMessages, KnowledgeLevel } from "@/lib/prompts";
+import {
+  getAnnotationMessages,
+  getAnchorAnnotationMessages,
+  KnowledgeLevel,
+} from "@/lib/prompts";
+import { getAnchorById } from "@/lib/anchors";
+import { cachedContentStream } from "@/lib/card-cache";
 import { createSupabaseServerClient } from "@/lib/supabase";
 import { checkAndUnlockAchievements } from "@/lib/achievements";
+
+// Curated anchor passages use the premium model; free selection uses Sonnet.
+const ANNOTATION_MODEL = "anthropic/claude-sonnet-5";
+const ANCHOR_MODEL = "anthropic/claude-opus-4.8";
 
 function parseLineRange(
   lineRange: string
@@ -50,11 +60,13 @@ export async function POST(request: NextRequest) {
   }
 
   let passage: string, lineRange: string, level: KnowledgeLevel;
+  let anchorId: string | undefined;
   try {
     const body = await request.json();
     passage = body.passage;
     lineRange = body.lineRange;
     level = body.level;
+    anchorId = body.anchorId;
   } catch {
     return Response.json({ error: "Invalid request body" }, { status: 400 });
   }
@@ -66,7 +78,61 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  const messages = getAnnotationMessages(passage, lineRange || "?", level);
+  const anchor = anchorId ? getAnchorById(anchorId) : undefined;
+  if (anchorId && !anchor) {
+    return Response.json({ error: "Unknown anchor" }, { status: 400 });
+  }
+
+  const existingSessionId = request.cookies.get("gb_session")?.value;
+  const sessionId = existingSessionId || crypto.randomUUID();
+  const { lineStart, lineEnd } = parseLineRange(lineRange);
+  const supabase = createSupabaseServerClient();
+
+  const headers = new Headers({
+    "Content-Type": "text/event-stream",
+    "Cache-Control": "no-cache",
+    "X-Content-Type-Options": "nosniff",
+  });
+  if (!existingSessionId) {
+    headers.append(
+      "Set-Cookie",
+      `gb_session=${sessionId}; Path=/; HttpOnly; SameSite=Lax; Max-Age=31536000`
+    );
+  }
+
+  // Anchor passages are curated: serve from cache when already generated.
+  const anchorCacheKey = anchor ? `anchor:${anchor.id}:${level}:v1` : null;
+  if (anchorCacheKey) {
+    const { data: cached } = await supabase
+      .from("section_card_cache")
+      .select("content")
+      .eq("cache_key", anchorCacheKey)
+      .maybeSingle();
+
+    if (cached?.content) {
+      // Still record the visit in the reader's journal — fire-and-forget
+      void (async () => {
+        try {
+          const chapterId = await resolveBook1ChapterId();
+          await supabase.from("annotation_history").insert({
+            session_id: sessionId,
+            chapter_id: chapterId,
+            line_start: lineStart,
+            line_end: lineEnd,
+            passage,
+            knowledge_level: level,
+            annotation_content: cached.content,
+          });
+        } catch {}
+      })();
+
+      return new Response(cachedContentStream(cached.content), { headers });
+    }
+  }
+
+  const messages = anchor
+    ? getAnchorAnnotationMessages(passage, lineRange || "?", level, anchor.angle)
+    : getAnnotationMessages(passage, lineRange || "?", level);
 
   let upstream: Response;
   try {
@@ -82,7 +148,7 @@ export async function POST(request: NextRequest) {
           "X-Title": "Great Books",
         },
         body: JSON.stringify({
-          model: "anthropic/claude-sonnet-5",
+          model: anchor ? ANCHOR_MODEL : ANNOTATION_MODEL,
           messages,
           stream: true,
           max_tokens: 10000,
@@ -111,11 +177,7 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  const existingSessionId = request.cookies.get("gb_session")?.value;
-  const sessionId = existingSessionId || crypto.randomUUID();
-  const { lineStart, lineEnd } = parseLineRange(lineRange);
   const chapterId = await resolveBook1ChapterId();
-  const supabase = createSupabaseServerClient();
 
   const reader = upstream.body.getReader();
   const decoder = new TextDecoder();
@@ -158,6 +220,18 @@ export async function POST(request: NextRequest) {
             annotation_content: completionText,
           });
 
+          // Anchor annotations are generated once, then served from cache
+          if (anchorCacheKey) {
+            try {
+              await supabase.from("section_card_cache").upsert(
+                { cache_key: anchorCacheKey, content: completionText },
+                { onConflict: "cache_key" }
+              );
+            } catch {
+              // Non-fatal — next request regenerates
+            }
+          }
+
           // Reading streak — fire-and-forget, non-blocking
           void (async () => {
             try {
@@ -199,22 +273,5 @@ export async function POST(request: NextRequest) {
     },
   });
 
-  const headers = new Headers({
-    "Content-Type": "text/event-stream",
-    "Cache-Control": "no-cache",
-    "X-Content-Type-Options": "nosniff",
-  });
-
-  if (!existingSessionId) {
-    headers.append(
-      "Set-Cookie",
-      `gb_session=${sessionId}; Path=/; HttpOnly; SameSite=Lax; Max-Age=31536000`
-    );
-  }
-
-  return new Response(stream, {
-    headers: {
-      ...Object.fromEntries(headers.entries()),
-    },
-  });
+  return new Response(stream, { headers });
 }

@@ -1,7 +1,8 @@
 "use client";
 
 import React, { useState, useRef, useCallback, useEffect } from "react";
-import { book1 } from "@/lib/paradise-lost";
+import { book1, getLineRange } from "@/lib/paradise-lost";
+import { getAnchorForLine, type Anchor } from "@/lib/anchors";
 import type { KnowledgeLevel } from "@/lib/prompts";
 import { BOOK_1_SECTIONS } from "@/lib/sections";
 import type { Achievement } from "@/lib/types";
@@ -14,7 +15,8 @@ interface ReaderProps {
   onAnnotateRequest: (
     passage: string,
     lineRange: string,
-    lines: { start: number; end: number }
+    lines: { start: number; end: number },
+    anchorId?: string
   ) => void;
   onChatRequest: (passage: string) => void;
   completedSections: Set<string>;
@@ -192,15 +194,41 @@ export default function Reader({
     return () => document.removeEventListener("mousedown", onDocumentMouseDown);
   }, []);
 
-  function handleLineTap(
+  function openAnchor(anchor: Anchor) {
+    const passage = getLineRange(anchor.lineStart, anchor.lineEnd)
+      .map((l) => l.text)
+      .join("\n");
+    const rangeStr =
+      anchor.lineStart === anchor.lineEnd
+        ? `${anchor.lineStart}`
+        : `${anchor.lineStart}–${anchor.lineEnd}`;
+    onAnnotateRequest(
+      passage,
+      rangeStr,
+      { start: anchor.lineStart, end: anchor.lineEnd },
+      anchor.id
+    );
+    setTrigger(null);
+    window.getSelection()?.removeAllRanges();
+  }
+
+  function handleLineClick(
     e: React.MouseEvent,
     line: { number: number; text: string }
   ) {
-    if (!isCoarsePointer) return;
-    // A real (long-press) text selection takes priority over tap-to-select
+    // A real text selection takes priority over click-to-open
     const selection = window.getSelection();
     if (selection && !selection.isCollapsed) return;
 
+    // Curated anchor lines open their annotation on click, any device
+    const anchor = getAnchorForLine(line.number);
+    if (anchor) {
+      openAnchor(anchor);
+      return;
+    }
+
+    // Touch devices: tapping any other line selects it whole
+    if (!isCoarsePointer) return;
     const x = Math.min(e.clientX + 8, window.innerWidth - 240);
     const y = e.clientY + 16;
     setTrigger({
@@ -265,6 +293,8 @@ export default function Reader({
                   line.number <= activeLines.end;
                 const isHintLine =
                   showFirstHint && line.number === FIRST_HINT_LINE;
+                const anchor = getAnchorForLine(line.number);
+                const isAnchorStart = anchor?.lineStart === line.number;
                 const isTapped =
                   isCoarsePointer &&
                   trigger !== null &&
@@ -274,7 +304,8 @@ export default function Reader({
                 return (
                   <React.Fragment key={line.number}>
                   <div
-                    onClick={(e) => handleLineTap(e, line)}
+                    onClick={(e) => handleLineClick(e, line)}
+                    className={anchor ? "anchor-line" : undefined}
                     style={{
                       display: "flex",
                       alignItems: "baseline",
@@ -302,13 +333,17 @@ export default function Reader({
                         fontFamily:
                           "var(--font-cormorant), Georgia, 'Times New Roman', serif",
                         fontSize: "12px",
-                        color: showNumber ? "#4a4540" : "transparent",
+                        color: isAnchorStart
+                          ? "rgba(201, 168, 76, 0.65)"
+                          : showNumber
+                            ? "#4a4540"
+                            : "transparent",
                         userSelect: "none",
                         flexShrink: 0,
                         transition: "color 0.3s ease",
                       }}
                     >
-                      {line.number}
+                      {isAnchorStart ? "✦" : line.number}
                     </span>
 
                     {/* Poem text */}
@@ -318,11 +353,12 @@ export default function Reader({
                         fontSize: "18px",
                         color: isActive ? "#f8f4ec" : "#f0ebe2",
                         letterSpacing: "0.01em",
-                        cursor: "text",
+                        cursor: anchor ? "pointer" : "text",
                         transition: "color 0.3s ease",
-                        borderBottom: isHintLine
-                          ? "1px dotted rgba(201, 168, 76, 0.45)"
-                          : undefined,
+                        borderBottom:
+                          isHintLine || anchor
+                            ? "1px dotted rgba(201, 168, 76, 0.45)"
+                            : undefined,
                       }}
                     >
                       {(line.text.match(/(\s+|[^\s]+)/g) ?? [line.text]).map(
@@ -372,7 +408,7 @@ export default function Reader({
                     >
                       {isCoarsePointer
                         ? "✦ Tap this line — see what a 1667 reader saw"
-                        : "✦ Try selecting this line — see what a 1667 reader saw"}
+                        : "✦ Click this line — see what a 1667 reader saw"}
                     </p>
                   )}
                   </React.Fragment>

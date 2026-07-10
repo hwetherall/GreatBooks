@@ -8,6 +8,7 @@ interface AnnotationCardProps {
   passage: string;
   lineRange: string;
   level: KnowledgeLevel;
+  anchorId?: string;
   onClose: () => void;
   onComplete?: (achievements: Achievement[]) => void;
 }
@@ -16,6 +17,7 @@ export default function AnnotationCard({
   passage,
   lineRange,
   level,
+  anchorId,
   onClose,
   onComplete,
 }: AnnotationCardProps) {
@@ -40,7 +42,7 @@ export default function AnnotationCard({
         const res = await fetch("/api/annotate", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ passage, lineRange, level }),
+          body: JSON.stringify({ passage, lineRange, level, anchorId }),
         });
 
         if (!res.ok) {
@@ -107,7 +109,7 @@ export default function AnnotationCard({
     return () => {
       cancelled = true;
     };
-  }, [passage, lineRange, level, attempt]);
+  }, [passage, lineRange, level, anchorId, attempt]);
 
   // Close on Escape key
   useEffect(() => {

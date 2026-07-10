@@ -69,6 +69,28 @@ export function getAnnotationMessages(
   ];
 }
 
+export function getAnchorAnnotationMessages(
+  passage: string,
+  lineRange: string,
+  level: KnowledgeLevel,
+  angle: string
+): Array<{ role: "system" | "user"; content: string }> {
+  const calibration = ANNOTATION_LEVEL_CALIBRATION[level];
+  const system = `${ANNOTATION_SYSTEM_BASE}
+
+This passage is one of the most famous in the poem. The annotation below will be shown to every reader who clicks it, so it must be your best work. Build the annotation around this editorial angle:
+
+${angle}
+
+Reader level: ${KNOWLEDGE_LEVEL_LABELS[level]}. ${calibration}`;
+  const user = `Book I, lines ${lineRange}:\n\n"${passage}"`;
+
+  return [
+    { role: "system", content: system },
+    { role: "user", content: user },
+  ];
+}
+
 // ── Chat ──────────────────────────────────────────────────────────────────────
 
 export function getChatSystemPrompt(level: KnowledgeLevel): string {

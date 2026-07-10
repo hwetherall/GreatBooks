@@ -13,6 +13,8 @@
 import "dotenv/config";
 import { KNOWLEDGE_LEVELS } from "../lib/prompts";
 import { BOOK_1_SECTIONS } from "../lib/sections";
+import { BOOK_1_ANCHORS } from "../lib/anchors";
+import { getLineRange } from "../lib/paradise-lost";
 
 const BASE_URL = process.argv[2] || "http://localhost:3000";
 const CONCURRENCY = 3;
@@ -121,6 +123,29 @@ async function main() {
             }),
         });
       }
+    }
+    for (const anchor of BOOK_1_ANCHORS) {
+      const passage = getLineRange(anchor.lineStart, anchor.lineEnd)
+        .map((l) => l.text)
+        .join("\n");
+      const lineRange =
+        anchor.lineStart === anchor.lineEnd
+          ? `${anchor.lineStart}`
+          : `${anchor.lineStart}–${anchor.lineEnd}`;
+      targets.push({
+        label: `anchor:${anchor.id}:${level}`,
+        request: () =>
+          fetch(`${BASE_URL}/api/annotate`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              passage,
+              lineRange,
+              level,
+              anchorId: anchor.id,
+            }),
+          }),
+      });
     }
   }
 
