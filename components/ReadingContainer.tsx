@@ -11,9 +11,11 @@ import ProgressBar from "./ProgressBar";
 import AnnotationHistory from "./AnnotationHistory";
 import AchievementToast from "./AchievementToast";
 import FeedbackModal from "./FeedbackModal";
+import WelcomeOverlay from "./WelcomeOverlay";
 
 const STORAGE_KEY = "greatbooks-knowledge-level";
 const FIRST_ENRICH_KEY = "greatbooks-first-enrichment";
+const WELCOME_KEY = "greatbooks-welcome-seen";
 const DEFAULT_LEVEL: KnowledgeLevel = "noob";
 
 interface AnnotationState {
@@ -32,6 +34,7 @@ export default function ReadingContainer() {
   const [toastQueue, setToastQueue] = useState<Achievement[]>([]);
   const [chatPassage, setChatPassage] = useState<string | null>(null);
   const [showFirstHint, setShowFirstHint] = useState(false);
+  const [showWelcome, setShowWelcome] = useState(false);
 
   useEffect(() => {
     const stored = localStorage.getItem(STORAGE_KEY) as KnowledgeLevel | null;
@@ -41,7 +44,17 @@ export default function ReadingContainer() {
     if (!localStorage.getItem(FIRST_ENRICH_KEY)) {
       setShowFirstHint(true);
     }
+    if (!localStorage.getItem(WELCOME_KEY)) {
+      setShowWelcome(true);
+    }
   }, []);
+
+  function handleBeginReading(chosen: KnowledgeLevel) {
+    setLevel(chosen);
+    localStorage.setItem(STORAGE_KEY, chosen);
+    localStorage.setItem(WELCOME_KEY, "seen");
+    setShowWelcome(false);
+  }
 
   useEffect(() => {
     fetch("/api/section-progress")
@@ -103,6 +116,15 @@ export default function ReadingContainer() {
 
   return (
     <>
+      <button
+        className="welcome-reopen"
+        onClick={() => setShowWelcome(true)}
+        aria-label="About this companion"
+        title="About this companion"
+      >
+        ?
+      </button>
+
       <ProgressBar
         completedSections={completedSections}
         currentSectionId={currentSectionId}
@@ -147,6 +169,14 @@ export default function ReadingContainer() {
           key={`${toastQueue[0].id}-${annotationVersion}`}
           achievement={toastQueue[0]}
           onDismiss={dismissToast}
+        />
+      )}
+
+      {showWelcome && (
+        <WelcomeOverlay
+          initialLevel={level}
+          onBegin={handleBeginReading}
+          onClose={() => setShowWelcome(false)}
         />
       )}
     </>

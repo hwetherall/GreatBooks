@@ -184,6 +184,59 @@ body {
   margin-bottom: 0;
 }
 
+/* ── Welcome overlay ──────────────────────────────────────────────────────── */
+.welcome-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  background: #0d0d0e;
+  overflow-y: auto;
+  animation: fadeIn 0.3s ease forwards;
+}
+
+.welcome-inner {
+  max-width: 600px;
+  margin: 0 auto;
+  padding: 72px 24px 64px;
+}
+
+.welcome-levels {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+}
+
+@media (max-width: 640px) {
+  .welcome-inner {
+    padding: 56px 20px 48px;
+  }
+  .welcome-levels {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+/* Small affordance to reopen the welcome */
+.welcome-reopen {
+  position: fixed;
+  top: 16px;
+  left: 16px;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: transparent;
+  border: 1px solid #2a2820;
+  color: #4a4540;
+  font-family: var(--font-cormorant), Georgia, serif;
+  font-size: 15px;
+  cursor: pointer;
+  z-index: 25;
+  transition: color 0.15s ease, border-color 0.15s ease;
+}
+.welcome-reopen:hover {
+  color: #c9a84c;
+  border-color: #4a4540;
+}
+
 /* ── Curated anchor lines ─────────────────────────────────────────────────── */
 .anchor-line:hover {
   background: rgba(201, 168, 76, 0.05);
