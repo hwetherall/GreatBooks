@@ -20,6 +20,7 @@ interface ReaderProps {
   completedSections: Set<string>;
   onSectionComplete: (sectionId: string, achievements: Achievement[]) => void;
   onSectionVisible: (sectionId: string) => void;
+  showFirstHint: boolean;
 }
 
 interface TriggerState {
@@ -67,6 +68,9 @@ function getLineRangeFromSelection(
 // Total pages: 0 = "Before You Begin" primer, 1–6 = sections
 const TOTAL_PAGES = 1 + BOOK_1_SECTIONS.length;
 
+// "darkness visible" — the line the one-time enrichment hint points at
+const FIRST_HINT_LINE = 63;
+
 export default function Reader({
   level,
   activeLines,
@@ -75,10 +79,17 @@ export default function Reader({
   completedSections,
   onSectionComplete,
   onSectionVisible,
+  showFirstHint,
 }: ReaderProps) {
   const { lines } = book1;
   const [currentPage, setCurrentPage] = useState(0);
   const [trigger, setTrigger] = useState<TriggerState | null>(null);
+  // Touch devices get tap-to-select-a-line instead of fiddly native text selection
+  const [isCoarsePointer, setIsCoarsePointer] = useState(false);
+
+  useEffect(() => {
+    setIsCoarsePointer(window.matchMedia("(pointer: coarse)").matches);
+  }, []);
   const [vocabByLine, setVocabByLine] = useState<Map<number, Map<string, VocabCard>>>(
     new Map()
   );
@@ -181,6 +192,26 @@ export default function Reader({
     return () => document.removeEventListener("mousedown", onDocumentMouseDown);
   }, []);
 
+  function handleLineTap(
+    e: React.MouseEvent,
+    line: { number: number; text: string }
+  ) {
+    if (!isCoarsePointer) return;
+    // A real (long-press) text selection takes priority over tap-to-select
+    const selection = window.getSelection();
+    if (selection && !selection.isCollapsed) return;
+
+    const x = Math.min(e.clientX + 8, window.innerWidth - 240);
+    const y = e.clientY + 16;
+    setTrigger({
+      text: line.text,
+      lineRange: `${line.number}`,
+      lines: { start: line.number, end: line.number },
+      viewportX: Math.max(12, x),
+      viewportY: y,
+    });
+  }
+
   function handleTriggerClick() {
     if (!trigger) return;
     onAnnotateRequest(trigger.text, trigger.lineRange, trigger.lines);
@@ -232,10 +263,18 @@ export default function Reader({
                   activeLines !== null &&
                   line.number >= activeLines.start &&
                   line.number <= activeLines.end;
+                const isHintLine =
+                  showFirstHint && line.number === FIRST_HINT_LINE;
+                const isTapped =
+                  isCoarsePointer &&
+                  trigger !== null &&
+                  line.number >= trigger.lines.start &&
+                  line.number <= trigger.lines.end;
 
                 return (
+                  <React.Fragment key={line.number}>
                   <div
-                    key={line.number}
+                    onClick={(e) => handleLineTap(e, line)}
                     style={{
                       display: "flex",
                       alignItems: "baseline",
@@ -245,9 +284,10 @@ export default function Reader({
                       paddingLeft: "6px",
                       paddingRight: "6px",
                       borderRadius: "3px",
-                      background: isActive
-                        ? "rgba(201, 168, 76, 0.07)"
-                        : "transparent",
+                      background:
+                        isActive || isTapped
+                          ? "rgba(201, 168, 76, 0.07)"
+                          : "transparent",
                       transition: "background 0.3s ease",
                     }}
                   >
@@ -280,6 +320,9 @@ export default function Reader({
                         letterSpacing: "0.01em",
                         cursor: "text",
                         transition: "color 0.3s ease",
+                        borderBottom: isHintLine
+                          ? "1px dotted rgba(201, 168, 76, 0.45)"
+                          : undefined,
                       }}
                     >
                       {(line.text.match(/(\s+|[^\s]+)/g) ?? [line.text]).map(
@@ -313,6 +356,26 @@ export default function Reader({
                       )}
                     </span>
                   </div>
+                  {isHintLine && (
+                    <p
+                      style={{
+                        margin: "2px 0 12px",
+                        paddingLeft: "48px",
+                        fontFamily:
+                          "var(--font-cormorant), Georgia, 'Times New Roman', serif",
+                        fontSize: "13px",
+                        fontStyle: "italic",
+                        letterSpacing: "0.05em",
+                        color: "#8a6c28",
+                        userSelect: "none",
+                      }}
+                    >
+                      {isCoarsePointer
+                        ? "✦ Tap this line — see what a 1667 reader saw"
+                        : "✦ Try selecting this line — see what a 1667 reader saw"}
+                    </p>
+                  )}
+                  </React.Fragment>
                 );
               })}
               <SectionCard

@@ -8,14 +8,14 @@ export const KNOWLEDGE_LEVELS: KnowledgeLevel[] = [
 ];
 
 export const KNOWLEDGE_LEVEL_LABELS: Record<KnowledgeLevel, string> = {
-  noob: "Complete Noob",
+  noob: "Newcomer",
   casual: "Casual Reader",
   enthusiast: "Literature Enthusiast",
   scholar: "Experienced Scholar",
 };
 
 export const KNOWLEDGE_LEVEL_SHORT: Record<KnowledgeLevel, string> = {
-  noob: "Noob",
+  noob: "Newcomer",
   casual: "Casual",
   enthusiast: "Enthusiast",
   scholar: "Scholar",

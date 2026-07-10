@@ -44,11 +44,10 @@ export async function POST(request: NextRequest) {
         "X-Title": "Great Books",
       },
       body: JSON.stringify({
-        model: "anthropic/claude-sonnet-4.6",
+        model: "anthropic/claude-sonnet-5",
         messages: fullMessages,
         stream: true,
         max_tokens: 10000,
-        temperature: 0.75,
       }),
     });
   } catch (err) {

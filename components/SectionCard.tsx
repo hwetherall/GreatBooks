@@ -88,6 +88,7 @@ export default function SectionCard({
   const [error, setError] = useState<string | null>(null);
   const [localCompleted, setLocalCompleted] = useState(false);
   const [hasStarted, setHasStarted] = useState(false);
+  const [attempt, setAttempt] = useState(0);
   const containerRef = useRef<HTMLDivElement>(null);
 
   // Reset when level changes
@@ -206,7 +207,7 @@ export default function SectionCard({
     return () => {
       cancelled = true;
     };
-  }, [hasStarted, section.id, level, cardType]);
+  }, [hasStarted, section.id, level, cardType, attempt]);
 
   async function handleMarkComplete() {
     setLocalCompleted(true);
@@ -237,6 +238,37 @@ export default function SectionCard({
     />
   );
 
+  const errorState = (
+    <div>
+      <p
+        style={{
+          fontFamily: "var(--font-lora), Georgia, serif",
+          fontSize: "15px",
+          color: "#8a847a",
+          fontStyle: "italic",
+          margin: "0 0 10px",
+        }}
+      >
+        {error}
+      </p>
+      <button
+        onClick={() => setAttempt((a) => a + 1)}
+        style={{
+          color: "#c9a84c",
+          fontFamily: "var(--font-cormorant), Georgia, 'Times New Roman', serif",
+          fontSize: "14px",
+          letterSpacing: "0.04em",
+          background: "transparent",
+          border: "none",
+          cursor: "pointer",
+          padding: 0,
+        }}
+      >
+        Try again →
+      </button>
+    </div>
+  );
+
   if (cardType === "before") {
     return (
       <div ref={containerRef} style={{ padding: "32px 0 24px" }}>
@@ -256,17 +288,7 @@ export default function SectionCard({
         </p>
 
         {error ? (
-          <p
-            style={{
-              fontFamily: "var(--font-lora), Georgia, serif",
-              fontSize: "15px",
-              color: "#8a847a",
-              fontStyle: "italic",
-              margin: 0,
-            }}
-          >
-            {error}
-          </p>
+          errorState
         ) : isStreaming && text.length === 0 ? (
           <p
             className="annotation-loading"
@@ -296,17 +318,7 @@ export default function SectionCard({
       {divider}
 
       {error ? (
-        <p
-          style={{
-            fontFamily: "var(--font-lora), Georgia, serif",
-            fontSize: "15px",
-            color: "#8a847a",
-            fontStyle: "italic",
-            margin: 0,
-          }}
-        >
-          {error}
-        </p>
+        errorState
       ) : isStreaming && text.length === 0 ? (
         <p
           className="annotation-loading"

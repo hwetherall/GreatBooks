@@ -22,6 +22,7 @@ export default function AnnotationCard({
   const [text, setText] = useState("");
   const [isStreaming, setIsStreaming] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [attempt, setAttempt] = useState(0);
   const bodyRef = useRef<HTMLDivElement>(null);
 
   // Fetch annotation with streaming on mount
@@ -106,7 +107,7 @@ export default function AnnotationCard({
     return () => {
       cancelled = true;
     };
-  }, [passage, lineRange, level]);
+  }, [passage, lineRange, level, attempt]);
 
   // Close on Escape key
   useEffect(() => {
@@ -218,18 +219,36 @@ export default function AnnotationCard({
         {/* Scrollable annotation body */}
         <div ref={bodyRef} style={{ padding: "20px 24px 40px", overflowY: "auto", flex: 1 }}>
           {error ? (
-            <p
-              style={{
-                fontFamily: "var(--font-lora), Georgia, serif",
-                fontSize: "15px",
-                lineHeight: 1.7,
-                color: "#8a847a",
-                fontStyle: "italic",
-                margin: 0,
-              }}
-            >
-              {error}
-            </p>
+            <div>
+              <p
+                style={{
+                  fontFamily: "var(--font-lora), Georgia, serif",
+                  fontSize: "15px",
+                  lineHeight: 1.7,
+                  color: "#8a847a",
+                  fontStyle: "italic",
+                  margin: "0 0 10px",
+                }}
+              >
+                {error}
+              </p>
+              <button
+                onClick={() => setAttempt((a) => a + 1)}
+                style={{
+                  color: "#c9a84c",
+                  fontFamily:
+                    "var(--font-cormorant), Georgia, 'Times New Roman', serif",
+                  fontSize: "14px",
+                  letterSpacing: "0.04em",
+                  background: "transparent",
+                  border: "none",
+                  cursor: "pointer",
+                  padding: 0,
+                }}
+              >
+                Try again →
+              </button>
+            </div>
           ) : isStreaming && text.length === 0 ? (
             /* Loading state */
             <p

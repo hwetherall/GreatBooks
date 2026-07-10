@@ -20,6 +20,9 @@ const lora = Lora({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL(
+    process.env.NEXT_PUBLIC_SITE_URL || "https://greatbooks.vercel.app"
+  ),
   title: "Paradise Lost — Great Books",
   description:
     "Read Paradise Lost by John Milton with contextual enrichment. An AI-powered reading companion that restores what Milton's original audience already knew.",
@@ -27,6 +30,9 @@ export const metadata: Metadata = {
     title: "Paradise Lost — Great Books",
     description:
       "An AI reading companion for serious readers. Contextual enrichment for Paradise Lost calibrated to your knowledge level.",
+  },
+  twitter: {
+    card: "summary_large_image",
   },
 };
 

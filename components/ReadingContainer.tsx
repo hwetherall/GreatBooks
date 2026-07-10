@@ -13,6 +13,7 @@ import AchievementToast from "./AchievementToast";
 import FeedbackModal from "./FeedbackModal";
 
 const STORAGE_KEY = "greatbooks-knowledge-level";
+const FIRST_ENRICH_KEY = "greatbooks-first-enrichment";
 const DEFAULT_LEVEL: KnowledgeLevel = "noob";
 
 interface AnnotationState {
@@ -29,11 +30,15 @@ export default function ReadingContainer() {
   const [annotationVersion, setAnnotationVersion] = useState(0);
   const [toastQueue, setToastQueue] = useState<Achievement[]>([]);
   const [chatPassage, setChatPassage] = useState<string | null>(null);
+  const [showFirstHint, setShowFirstHint] = useState(false);
 
   useEffect(() => {
     const stored = localStorage.getItem(STORAGE_KEY) as KnowledgeLevel | null;
     if (stored && KNOWLEDGE_LEVELS.includes(stored)) {
       setLevel(stored);
+    }
+    if (!localStorage.getItem(FIRST_ENRICH_KEY)) {
+      setShowFirstHint(true);
     }
   }, []);
 
@@ -80,6 +85,10 @@ export default function ReadingContainer() {
     lines: { start: number; end: number }
   ) {
     setAnnotation({ passage, lineRange, lines });
+    if (showFirstHint) {
+      localStorage.setItem(FIRST_ENRICH_KEY, "done");
+      setShowFirstHint(false);
+    }
   }
 
   function handleAnnotationClose() {
@@ -107,6 +116,7 @@ export default function ReadingContainer() {
         completedSections={completedSections}
         onSectionComplete={handleSectionComplete}
         onSectionVisible={handleSectionVisible}
+        showFirstHint={showFirstHint}
       />
 
       {annotation && (

@@ -84,6 +84,7 @@ export default function Primer({ level }: PrimerProps) {
   const [text, setText] = useState("");
   const [isStreaming, setIsStreaming] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [attempt, setAttempt] = useState(0);
 
   useEffect(() => {
     let cancelled = false;
@@ -150,7 +151,7 @@ export default function Primer({ level }: PrimerProps) {
     return () => {
       cancelled = true;
     };
-  }, [level]);
+  }, [level, attempt]);
 
   return (
     <section style={{ marginBottom: "72px" }}>
@@ -170,18 +171,36 @@ export default function Primer({ level }: PrimerProps) {
       </p>
 
       {error ? (
-        <p
-          style={{
-            fontFamily: "var(--font-lora), Georgia, serif",
-            fontSize: "15px",
-            lineHeight: 1.75,
-            color: "#8a847a",
-            fontStyle: "italic",
-            margin: 0,
-          }}
-        >
-          {error}
-        </p>
+        <div>
+          <p
+            style={{
+              fontFamily: "var(--font-lora), Georgia, serif",
+              fontSize: "15px",
+              lineHeight: 1.75,
+              color: "#8a847a",
+              fontStyle: "italic",
+              margin: "0 0 10px",
+            }}
+          >
+            {error}
+          </p>
+          <button
+            onClick={() => setAttempt((a) => a + 1)}
+            style={{
+              color: "#c9a84c",
+              fontFamily:
+                "var(--font-cormorant), Georgia, 'Times New Roman', serif",
+              fontSize: "14px",
+              letterSpacing: "0.04em",
+              background: "transparent",
+              border: "none",
+              cursor: "pointer",
+              padding: 0,
+            }}
+          >
+            Try again →
+          </button>
+        </div>
       ) : isStreaming && text.length === 0 ? (
         <p
           style={{

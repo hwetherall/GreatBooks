@@ -23,7 +23,7 @@ export async function GET(request: NextRequest) {
     );
   }
 
-  const cacheKey = `primer:${level}:v2`;
+  const cacheKey = `primer:${level}:v3`;
   const supabase = createSupabaseServerClient();
 
   // Check cache
@@ -58,11 +58,10 @@ export async function GET(request: NextRequest) {
         "X-Title": "Great Books",
       },
       body: JSON.stringify({
-        model: "anthropic/claude-sonnet-4.6",
+        model: "anthropic/claude-sonnet-5",
         messages: [{ role: "user", content: prompt }],
         stream: true,
         max_tokens: 1200,
-        temperature: 0.75,
       }),
     });
   } catch (err) {

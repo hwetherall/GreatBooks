@@ -24,7 +24,7 @@ The product is being built as a demo to send to **Johnathan Bi**, founder of Gre
 | Framework | Next.js (App Router) |
 | Styling | Tailwind v4 |
 | Language | TypeScript — strict, no `any` |
-| AI | OpenRouter → `anthropic/claude-sonnet-4.6` |
+| AI | OpenRouter → `anthropic/claude-sonnet-5` |
 | Database | Supabase (Postgres) |
 | Deployment | Vercel |
 
@@ -89,8 +89,8 @@ Study `/api/annotate/route.ts` before touching any AI route. Mirror it exactly. 
 
 ### AI Model
 
-Always use: `anthropic/claude-sonnet-4.6`
-Temperature: `0.75`
+Always use: `anthropic/claude-sonnet-5`
+Sampling parameters are model-managed (Sonnet 5 ignores `temperature`, `top_p`, and `top_k`)
 Max tokens: `800` for cards/primers, `10000` for chat
 
 ### Knowledge Levels

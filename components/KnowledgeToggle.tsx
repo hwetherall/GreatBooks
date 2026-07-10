@@ -40,9 +40,9 @@ export default function KnowledgeToggle({
       </p>
 
       {/* Desktop: horizontal grid of tabs */}
+      {/* display comes from the .hidden-mobile class so the mobile media query can hide it */}
       <div
         style={{
-          display: "grid",
           gridTemplateColumns: "repeat(4, 1fr)",
           gap: "8px",
         }}
